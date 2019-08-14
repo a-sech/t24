@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Temenos T24 Help</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.css">
+    <link rel="stylesheet" href="css/bootstrap-select.css">
+    <link rel="stylesheet" href="css/sidebar.css">
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.js" defer></script>
+    <script src="js/bootstrap-select.js" defer></script>
+    <script src="js/jquery.highlight-5.js"></script>
+
+    <script type="text/javascript">
+        var $folder = "HELP.TEXT";
+        var $subfolder = "HelpText";
+
+        $(window).load(function () {
+            retrive_app_list();
+            $('#input_search').val('');
+            $("#fields_filter").val('');
+        });
+
+        function retrive_app_list() {
+            var file_name = $folder + "/" + "portal-help-menu.xml";
+            var xmlDoc = get_xml_data(file_name);
+
+            var apps = xmlDoc.getElementsByTagName("tar");
+
+            for (i = 0; i < apps.length; i++) {
+                $('#app').append(
+                   '<option value="' + apps[i].innerHTML + '">' + apps[i].innerHTML.split('/')[1] + '</option>'
+                );
+            };
+        }
+
+        function retrive_xml_data() {
+            var file_name = $folder + "/" + $subfolder + "/" + $("#app").val() + ".xml";
+            var xmlDoc = get_xml_data(file_name);
+
+            var table_name = xmlDoc.getElementsByTagName("table")[0].innerHTML;
+            var table_overview = xmlDoc.getElementsByTagName("ovdesc")[0].innerHTML;
+            var table_header = "<table class='table table-striped'><thead class='thead-light' style='font-style: italic;'><tr><td>Field</td><td>Description</td><tr></thead>";
+            var app_fields = xmlDoc.getElementsByTagName("t");
+            var app_help = '<tbody id="fields_table" >';
+            var fields_list = new Array();
+
+            for (i = 0; i < app_fields.length; i++) {
+
+                field_name = app_fields[i].getElementsByTagName("field")[0];
+                if (typeof (field_name) == "undefined") {
+                    field_name = '';
+                } else {
+                    field_name = field_name.innerHTML;
+                    fields_list.push(field_name);
+                }
+
+                field_desc = app_fields[i].getElementsByTagName("desc")[0];
+                if (typeof (field_desc) == "undefined") {
+                    field_desc = '';
+                } else {
+                    field_desc = field_desc.innerHTML;
+                }
+
+                app_help = app_help + '<tr><td id="' + field_name + '"><b>' + field_name + '</b></td><td><small>' + field_desc + '</small></td><tr>';
+
+            }
+            app_help = app_help + '</tbody>';
+
+            $("#xml_div").html("<h3>" + table_name + "</h3><a href='#overview' data-toggle='collapse' class='btn btn-default' >Common description</a>"
+                + '<div id="overview" class="collapse">' + table_overview + "</div>" + table_header + app_help + "</table>");
+
+            $("#fields_list").html("");
+            fields_list.sort();
+            fields_list.forEach(function (item, index, array) {
+                $("#fields_list").append('<li class="list-group-item" style="padding: 2px;" >' + item + '</li>');
+            });
+
+            $("#fields_list li").on("click", function () {
+
+                $("#fields_list li").removeClass('active');
+                var field = $(this);
+                field.addClass('active');
+
+                var value = field.text().toLowerCase();
+                $("#fields_table tr").filter(function () {
+                    $(this).toggle($(this).children("td:first").text().toLowerCase().indexOf(value) > -1);
+                });
+
+            });
+
+        }
+
+        function get_xml_data(file_name) {
+            if (window.XMLHttpRequest) { // code for IE7+, Firefox, Chrome, Opera, Safari
+                xmlhttp = new XMLHttpRequest();
+            } else { // code for IE6, IE5
+                xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+            }
+
+            xmlhttp.open("GET", file_name, false);
+            xmlhttp.send();
+            return xmlhttp.responseXML;
+        }
+
+    </script>
+    <script>
+        $(document).ready(function () {
+            $("#input_search").on("keyup", function () {
+
+                $("#fields_list li").removeClass('active');
+
+                var value = $(this).val().toLowerCase();
+                $("#fields_table tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+
+                // highlight
+                $("#fields_table tr").removeHighlight();
+                $("#fields_table tr").highlight(value);
+            });
+
+            $('#all').on('click', function () {
+                $("#fields_list li").removeClass('active');
+                $("#fields_filter").val('');
+
+                $("#fields_table tr").filter(function () {
+                    $(this).toggle($(this).children("td:first").text().toLowerCase() != "");
+                });
+            });
+
+            $('#sidebarCollapse').on('click', function () {
+                $('#sidebar').toggleClass('active');
+            });
+        });
+    </script>
+    <style type="text/css">
+        .highlight {
+            font-weight: bold;
+            color: #2e6da4;
+        }
+    </style>
+    <script>
+        $(document).ready(function () {
+            $("#fields_filter").on("keyup", function () {
+                var value = $(this).val().toLowerCase();
+                $("#fields_list li").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="wrapper">
+
+
+        <!-- Page Content Holder -->
+        <button type="button" id="sidebarCollapse" class="btn btn-info">
+            <strong>FIELDs list</strong>
+        </button>
+
+        <!-- Sidebar Holder -->
+        <nav id="sidebar" class="active">
+            <div>
+                <div class="sidebar-header">
+                    <strong>Fields list</strong>
+                </div>
+
+                <div>
+                    <a id="all">All fields</a>
+                </div>
+
+                <div>
+                    <div class="row">
+                        <div>
+                            <input class="form-control" id="fields_filter" type="text" placeholder="Filter..">
+                            <br />
+                            <ul class="list-group" id="fields_list" style="max-height: 400px; overflow: auto;">
+                                <!-- <li class="list-group-item active">field</li> -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <nav class="navbar navbar-default navbar-fixed-top" >
+        <div class="container-fixed" style="margin: 10px;" >
+            <div class="navbar-header">
+				<ul class="nav navbar-nav"  >
+					<li style="margin-right:40px;">
+						<span class="icon-bar">
+							<img alt="Temenos" src="images\banner_start.gif" class="temenos-logo" style="height:40px;" />
+						</span>
+					</li>
+					<li>
+						<div class="form-group" style="width: 700px;">
+							<label for="app">Application:</label>
+							<select class="selectpicker" data-live-search="true" data-live-search-style="begins" id="app" onchange="retrive_xml_data()" title="Please select an application ..."></select>
+						</div>
+					</li>
+					<li>
+						<div class="form-group">
+							<input class="form-control" id="input_search" placeholder="Search.." type="text">
+						</div>
+					</li>
+				</ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-left: 50px; margin-top: 50px;">
+        <div class="col">
+            <div id="xml_div"></div>
+        </div>
+    </div>
+
+</body>
+</html>
